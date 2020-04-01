@@ -1,0 +1,77 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files: "{{ myvarfile }}"
+  tasks:  
+  - name: Getting detail-info of specific storage group
+    uri:
+      url: "{{ unisphere_url }}/univmax/restapi/90/sloprovisioning/symmetrix/{{ symmetrixId }}/storagegroup/{{ storageGroupId }}"
+      method: GET
+      validate_certs: no
+      user: "{{ Username }}"
+      password: "{{ Password }}"
+      force_basic_auth: yes
+      status_code: 201,200
+    register: storage_group_details
+  - debug:
+        msg: "{{ storage_group_details }}"
+
+  - name: volume creation for an storage group
+    uri:
+      url: "{{ unisphere_url }}/univmax/restapi/90/sloprovisioning/symmetrix/{{ symmetrixId }}/storagegroup/{{ storageGroupId }}"
+      method: PUT
+      validate_certs: no
+      user: "{{ Username }}"
+      password: "{{ Password }}"
+      force_basic_auth: yes
+      status_code: 201,200
+      body_format: json
+      body:
+        {
+          "editStorageGroupActionParam": {
+          "expandStorageGroupParam": {
+          "addVolumeParam": {
+          "num_of_vols": "{{ extension_volume_count }}",
+          "emulation": "FBA",
+          "volumeAttribute": {
+          "volume_size": "{{ extension_volume_size }}",
+          "capacityUnit": "GB"
+        },
+          "create_new_volumes": true
+        }
+      }
+     }
+    }
+
+    register: volume_extension
+  - debug:
+        msg: "{{ volume_extension }}"
+  - name: Getting the device details information of storage group
+    uri:
+      url: "{{ unisphere_url }}/univmax/restapi/90/sloprovisioning/symmetrix/{{ symmetrixId }}/volume?storageGroupId={{ storageGroupId }}"
+      method: GET
+      validate_certs: no
+      user: "{{ Username }}"
+      password: "{{ Password }}"
+      force_basic_auth: yes
+      status_code: 201,200
+    register: volume_details
+  - name: list of wwn
+    debug:
+      msg: "{{ volume_details.json.resultList.result|map(attribute='volumeId')|list }}"
+  - name: Fetching created device wwn information of the devices in the storage group
+    uri:
+      url: "{{ unisphere_url }}/univmax/restapi/90/sloprovisioning/symmetrix/{{ symmetrixId }}/volume/{{ item }}"
+      method: GET
+      validate_certs: no
+      user: "{{ Username }}"
+      password: "{{ Password }}"
+      force_basic_auth: yes
+      status_code: 201,200
+    register: device_wwn_details
+    with_items:
+      - "{{ volume_details.json.resultList.result|map(attribute='volumeId')|list }}"
+  - name: list of wwn
+    debug:
+      msg: "{{ device_wwn_details }}"
