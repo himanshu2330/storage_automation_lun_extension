@@ -28,20 +28,18 @@
       status_code: 201,200
       body_format: json
       body:
-        {  
-         "editStorageGroupActionParam": {  
-         "expandStorageGroupParam": {
-         "addVolumeParam": {
-         "num_of_vols": "{{ extension_volume_count }}",
-         "volumeIdentifier": {
-          "identifier_name": "{{ Ticket }}",
-          "volumeIdentifierChoice": "identifier_name"
-        },
-        "volumeAttribute": {
-          "volume_size": "{{ extension_volume_size}}",
+        {
+          "editStorageGroupActionParam": {
+          "expandStorageGroupParam": {
+          "addVolumeParam": {
+          "num_of_vols": "{{ extension_volume_count }}",
+          "emulation": "FBA",
+          "volumeAttribute": {
+          "volume_size": "{{ extension_volume_size }}",
           "capacityUnit": "GB"
+        },
+          "create_new_volumes": true
         }
-      }
       }
      }
     }
@@ -51,7 +49,7 @@
         msg: "{{ volume_extension }}"
   - name: Getting the device details information of storage group
     uri:
-      url: "{{ unisphere_url }}/univmax/restapi/90/sloprovisioning/symmetrix/{{ symmetrixId }}/volume?volume_identifier={{ Ticket }}&storageGroupId={{ storageGroupId }}"
+      url: "{{ unisphere_url }}/univmax/restapi/90/sloprovisioning/symmetrix/{{ symmetrixId }}/volume?storageGroupId={{ storageGroupId }}"
       method: GET
       validate_certs: no
       user: "{{ Username }}"
